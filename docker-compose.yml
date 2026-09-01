@@ -1,0 +1,38 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      # inside compose, reach Qdrant by service name
+      QDRANT_URL: http://qdrant:6333
+    ports:
+      - "3000:3000"
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    environment:
+      BACKEND_URL: http://backend:3000
+      VITE_AMBULANCE_NUMBER: ${VITE_AMBULANCE_NUMBER:-123}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
