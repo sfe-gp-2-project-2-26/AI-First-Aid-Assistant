@@ -22,8 +22,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: ./frontend
+      dockerfile: Dockerfile
     environment:
       BACKEND_URL: http://backend:3000
       VITE_AMBULANCE_NUMBER: ${VITE_AMBULANCE_NUMBER:-123}

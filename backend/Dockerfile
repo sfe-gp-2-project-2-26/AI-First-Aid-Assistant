@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -10,9 +10,10 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 COPY pyproject.toml ./
-RUN uv pip install --system --no-cache fastapi "uvicorn[standard]" pydantic pydantic-settings httpx qdrant-client python-multipart
-
 COPY src ./src
+
+RUN uv pip install --system --no-cache -e .
+
 ENV PYTHONPATH=/app/src
 
 EXPOSE 3000
