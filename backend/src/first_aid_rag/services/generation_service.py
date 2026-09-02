@@ -20,14 +20,16 @@ class GenerationService:
         llm_provider: Optional[LLMProvider] = None,
         prompt_manager: Optional[PromptManager] = None,
         min_score_threshold: float = settings.MIN_SIMILARITY_SCORE_THRESHOLD,
+        arabic_min_score_threshold: float = settings.ARABIC_MIN_SIMILARITY_SCORE_THRESHOLD,
     ):
         self.retrieval_service = retrieval_service or RetrievalService()
         self.llm_provider = llm_provider or LLMFactory().create()
         self.prompt_manager = prompt_manager or PromptManager()
         self.min_score_threshold = min_score_threshold
+        self.arabic_min_score_threshold = arabic_min_score_threshold
 
     async def generate_response(self, query: str) -> GenerateResponse:
-        """Execute clinical RAG generation pipeline: Intent Check -> Retrieval -> Filter Top 3 (>=80%) -> LLM + Citations -> AND Gate."""
+        """Execute clinical RAG generation pipeline: Intent Check -> Retrieval -> Filter Top 3 (>=80% or >=75% for Arabic) -> LLM + Citations -> AND Gate."""
         clean_query = query.strip()
         logger.info("Starting Clinical Generation Pipeline for query: '%.60s...'", clean_query)
 
@@ -53,14 +55,25 @@ class GenerationService:
                 filtered_chunks_count=0,
             )
 
+        # Determine language and effective similarity score threshold
+        locale = detect_locale(clean_query)
+        effective_threshold = (
+            self.arabic_min_score_threshold if locale == "ar" else self.min_score_threshold
+        )
+
         # 1. Retrieve candidates via Hybrid Vector Search + RRF Fusion
-        retrieval_response = await self.retrieval_service.search(query=clean_query)
+        retrieval_query = clean_query
+        if locale == "ar":
+            retrieval_query = await self.llm_provider.translate_to_english(clean_query)
+            logger.info("Translated Arabic query to English for better Hybrid Search retrieval: '%s'", retrieval_query)
+            
+        retrieval_response = await self.retrieval_service.search(query=retrieval_query)
         raw_results = retrieval_response.results
 
-        # 2. Filter retrieved candidates by similarity score threshold (>= 80%)
+        # 2. Filter retrieved candidates by similarity score threshold
         filtered_candidates: List[dict] = []
         for idx, item in enumerate(raw_results, 1):
-            if item.percentage_score >= self.min_score_threshold:
+            if item.percentage_score >= effective_threshold:
                 raw_chunk_id = getattr(item, "chunk_id", None)
                 if not raw_chunk_id or raw_chunk_id == item.document_id:
                     unique_chunk_id = f"chunk_p{item.pdf_page}_{idx}"
@@ -88,13 +101,13 @@ class GenerationService:
         selected_count = len(top_3_candidates)
 
         logger.info(
-            "Retrieval Stats: %d total retrieved | %d passed >= %.0f%% threshold | %d top chunks passed to LLM.",
-            retrieved_count, total_filtered_count, self.min_score_threshold, selected_count,
+            "Retrieval Stats: %d total retrieved | %d passed >= %.0f%% threshold (locale: %s) | %d top chunks passed to LLM.",
+            retrieved_count, total_filtered_count, effective_threshold, locale, selected_count,
         )
 
-        # 3. Guardrail Layer 1: If 0 candidates pass >=80% threshold, skip LLM call entirely
+        # 3. Guardrail Layer 1: If 0 candidates pass threshold, skip LLM call entirely
         if selected_count == 0:
-            logger.warning("0 chunks passed %.0f%% threshold. Refusing generation without calling LLM.", self.min_score_threshold)
+            logger.warning("0 chunks passed %.0f%% threshold. Refusing generation without calling LLM.", effective_threshold)
             refusal_result = ClinicalLLMResponse(
                 is_in_scope=True,
                 is_knowledge_sufficient=False,

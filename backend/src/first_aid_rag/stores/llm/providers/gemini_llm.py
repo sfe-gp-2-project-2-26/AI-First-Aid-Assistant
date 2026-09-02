@@ -279,11 +279,51 @@ class GeminiLLMProvider(LLMProvider):
                     data = res.json()
                     raw_json_str = data["candidates"][0]["content"]["parts"][0]["text"]
                     parsed = json.loads(raw_json_str)
-                    return bool(parsed.get("in_scope", True))
+                    is_in_scope = bool(parsed.get("in_scope", False))
+                return is_in_scope
+                
         except Exception as e:
-            logger.warning(f"Preliminary scope check failed: {e}")
+            logger.error(f"Failed to check scope via Gemini: {e}")
+            return True  # Fallback to True if scope check fails
+
+    async def translate_to_english(self, text: str) -> str:
+        """Translate the given text to English directly."""
+        if not self.api_key:
+            return text
             
-        return True
+        system_instruction = "You are a professional medical translator. Translate the given text to English accurately and directly without any additional explanation."
+        
+        payload = {
+            "system_instruction": {
+                "parts": [{"text": system_instruction}]
+            },
+            "contents": [{
+                "role": "user",
+                "parts": [{"text": text}]
+            }],
+            "generationConfig": {
+                "temperature": 0.0,
+            }
+        }
+
+        headers = {"Content-Type": "application/json"}
+        url = f"{self.base_url}?key={self.api_key}"
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.post(url, headers=headers, json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+                
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    return text
+                    
+                english_text = candidates[0]["content"]["parts"][0]["text"].strip()
+                return english_text
+        except Exception as e:
+            logger.error(f"Failed to translate query via Gemini: {e}")
+            return text
 
     async def check_health(self) -> bool:
         """Check if Gemini API Key is configured and service endpoint is reachable."""

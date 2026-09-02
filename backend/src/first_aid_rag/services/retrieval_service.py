@@ -85,17 +85,29 @@ class RetrievalService:
         hybrid_top_k: int = settings.HYBRID_TOP_K,
     ) -> SearchResponse:
         """Execute end-to-end retrieval flow: embed -> hybrid search -> RRF fusion."""
+        from first_aid_rag.prompts import detect_locale
+
         clean_query = query.strip()
         logger.info("Retrieval started for query (length: %d chars)", len(clean_query))
 
         # 1. Embed query (dense + sparse)
         query_embedding = await self.embedding_provider.embed_query(clean_query)
 
+        query_locale = detect_locale(clean_query)
+        # The corpus is predominantly English. Lexical sparse tokens won't overlap for Arabic queries.
+        if query_locale == "ar":
+            logger.info("Arabic query detected against English corpus. Skipping sparse lexical search.")
+            sparse_indices = []
+            sparse_values = []
+        else:
+            sparse_indices = query_embedding.sparse_indices
+            sparse_values = query_embedding.sparse_values
+
         # 2. Hybrid vector search in Qdrant
         dense_hits, sparse_hits = self.vector_store.hybrid_search(
             dense_vector=query_embedding.dense,
-            sparse_indices=query_embedding.sparse_indices,
-            sparse_values=query_embedding.sparse_values,
+            sparse_indices=sparse_indices,
+            sparse_values=sparse_values,
             dense_top_k=dense_top_k,
             sparse_top_k=sparse_top_k,
         )

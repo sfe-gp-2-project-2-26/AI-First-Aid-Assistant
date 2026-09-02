@@ -20,9 +20,10 @@ CRITICAL EVALUATION & FORMATTING RULES:
      - Set `refusal_reason = null`.
      - Include in `citations` ONLY the chunks actually drawn upon to construct the answer.
 
-4. FORMATTING RULES (BULLET POINTS & CONCISENESS):
-   - Format all emergency instructions, directions, and action steps in clear BULLET POINTS.
-   - Keep the answer as CONCISE and DIRECT as possible. Avoid unnecessary fluff or long text.
+4. FORMATTING RULES (STRICT MARKDOWN BULLET POINTS):
+   - You MUST format your `answer` entirely using standard Markdown bullet points (e.g., `- Step 1...`).
+   - Do NOT use plain text paragraphs; use `- ` or `* ` for each step or piece of information.
+   - Keep the answer CONCISE, DIRECT, and highly actionable. Avoid conversational fluff.
 
 5. LANGUAGE MATCHING RULE:
    - Always respond in the EXACT SAME language as the user's query!

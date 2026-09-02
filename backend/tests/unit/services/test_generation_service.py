@@ -103,3 +103,49 @@ async def test_successful_response_passes_and_gate():
     assert response.result.is_knowledge_sufficient is True
     assert response.result.answer == "Do chest compressions."
     assert response.result.refusal_reason is None
+
+@pytest.mark.asyncio
+async def test_arabic_query_passes_at_75_threshold():
+    mock_llm = AsyncMock()
+    mock_llm.is_query_in_scope.return_value = True
+    mock_llm.translate_to_english.return_value = "How to do CPR?"
+    mock_llm.generate.return_value = ClinicalLLMResponse(
+        is_in_scope=True,
+        is_knowledge_sufficient=True,
+        answer="قم بالضغط على الصدر.",
+        citations=[],
+        provider="gemini",
+        model_name="gemini-1.5-flash",
+        filtered_chunks_count=1
+    )
+    
+    mock_retrieval = AsyncMock()
+    # Chunk with 76% score (would fail English 80% threshold, but passes Arabic 75% threshold)
+    mock_retrieval.search.return_value = SearchResponse(
+        query="كيف أقوم بالإنعاش القلبي؟",
+        results=[
+            SearchResult(
+                text="CPR Instructions", 
+                score=0.76, 
+                percentage_score=76.0, 
+                document_id="1",
+                source="cpr.pdf",
+                pdf_page=1,
+                document_page=1
+            )
+        ]
+    )
+    
+    service = GenerationService(
+        retrieval_service=mock_retrieval,
+        llm_provider=mock_llm,
+        min_score_threshold=80.0,
+        arabic_min_score_threshold=75.0,
+    )
+    
+    response = await service.generate_response("كيف أقوم بالإنعاش القلبي؟")
+    
+    assert response.filtered_chunks_count == 1
+    assert response.result.is_knowledge_sufficient is True
+    assert response.result.answer == "قم بالضغط على الصدر."
+

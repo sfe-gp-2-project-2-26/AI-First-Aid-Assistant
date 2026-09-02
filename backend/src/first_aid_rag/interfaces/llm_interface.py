@@ -22,6 +22,11 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
+    async def translate_to_english(self, text: str) -> str:
+        """Translate the given text to English."""
+        pass
+
+    @abstractmethod
     async def check_health(self) -> bool:
         """Check the operational status/connectivity of the LLM service."""
         pass
