@@ -1,6 +1,6 @@
 """Prompt Manager — central access point for localized prompt templates."""
 
-from first_aid_rag.prompts.templates.locales import ar, en
+from first_aid_rag.prompts.locales import ar, en
 
 _LOCALES = {"en": en, "ar": ar}
 
@@ -22,3 +22,15 @@ class PromptManager:
 
     def get_out_of_scope_refusal(self, locale: str = "en") -> str:
         return _LOCALES.get(locale, en).REFUSAL_OUT_OF_SCOPE
+
+    def get_api_error_refusal(self, locale: str = "en", error: str = "") -> str:
+        return _LOCALES.get(locale, en).REFUSAL_API_ERROR.format(error=error)
+
+    def get_no_response_refusal(self, locale: str = "en") -> str:
+        return _LOCALES.get(locale, en).REFUSAL_NO_RESPONSE
+
+    def get_general_error_refusal(self, locale: str = "en", error: str = "") -> str:
+        return _LOCALES.get(locale, en).REFUSAL_GENERAL_ERROR.format(error=error)
+
+    def get_missing_api_key_refusal(self, locale: str = "en") -> str:
+        return _LOCALES.get(locale, en).REFUSAL_MISSING_API_KEY

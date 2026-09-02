@@ -1,5 +1,6 @@
-from typing import Optional, List
+from typing import List, Optional
 from pydantic import BaseModel, Field
+from first_aid_rag.schemas.common import BaseQueryRequest
 
 
 class Citation(BaseModel):
@@ -45,10 +46,9 @@ class ClinicalLLMResponse(BaseModel):
     filtered_chunks_count: int = Field(default=0, description="Number of context chunks passing the >=80% threshold.")
 
 
-class GenerateRequest(BaseModel):
+class GenerateRequest(BaseQueryRequest):
     """Input request schema for clinical generation API."""
-
-    query: str = Field(..., min_length=2, description="Clinical query string.")
+    pass
 
 
 class GenerateResponse(BaseModel):

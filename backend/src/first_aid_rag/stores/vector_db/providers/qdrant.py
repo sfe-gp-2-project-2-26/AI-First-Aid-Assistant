@@ -76,48 +76,7 @@ class QdrantProvider(VectorStore):
         except Exception:
             return False
 
-    def upsert_points(self, chunks: List[DocumentChunk], embeddings: List[EmbeddingResult]) -> int:
-        """Format chunks and embeddings into Qdrant PointStruct objects and upsert."""
-        if not chunks or not embeddings or len(chunks) != len(embeddings):
-            raise ValueError("Chunks and embeddings lists must be non-empty and of equal length.")
 
-        self.ensure_collection()
-
-        points: List[models.PointStruct] = []
-        for chunk, emb in zip(chunks, embeddings):
-            point_id = str(uuid.uuid4())
-
-            # Prepare payload containing all metadata fields plus chunk text
-            payload = chunk.metadata.model_dump()
-            payload["text"] = chunk.text
-
-            named_vectors = {
-                "dense": emb.dense,
-                "sparse": models.SparseVector(
-                    indices=emb.sparse_indices,
-                    values=emb.sparse_values,
-                ),
-            }
-
-            points.append(
-                models.PointStruct(
-                    id=point_id,
-                    vector=named_vectors,
-                    payload=payload,
-                )
-            )
-
-        # Batch upsert points
-        batch_size = 100
-        for i in range(0, len(points), batch_size):
-            batch = points[i : i + batch_size]
-            self.client.upsert(
-                collection_name=self.collection_name,
-                points=batch,
-            )
-
-        logger.info(f"Successfully upserted {len(points)} points into Qdrant collection '{self.collection_name}'.")
-        return len(points)
 
     def upsert_document_chunks(self, chunks: List[DocumentChunk]) -> int:
         """Upsert DocumentChunk objects containing embedded dense_vector, sparse_indices, sparse_values directly."""

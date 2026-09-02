@@ -63,12 +63,13 @@ class GeminiLLMProvider(LLMProvider):
         """Generate structured clinical response using Google Gemini API with Citation tracking."""
         if not self.api_key:
             logger.warning("GEMINI_API_KEY is not set. Returning default fallback refusal.")
+            locale = detect_locale(query)
             return ClinicalLLMResponse(
                 is_in_scope=True,
                 is_knowledge_sufficient=False,
                 answer=None,
                 citations=[],
-                refusal_reason="مفتاح Gemini API غير متاح في الإعدادات (.env). يرجى تعيين GEMINI_API_KEY.",
+                refusal_reason=PromptManager().get_missing_api_key_refusal(locale),
                 provider="gemini",
                 model_name=self.model_name,
                 filtered_chunks_count=len(filtered_docs),
@@ -145,12 +146,13 @@ class GeminiLLMProvider(LLMProvider):
 
                 if res.status_code != 200:
                     logger.error(f"Gemini API error ({res.status_code}): {res.text}")
+                    locale = detect_locale(query)
                     return ClinicalLLMResponse(
                         is_in_scope=True,
                         is_knowledge_sufficient=False,
                         answer=None,
                         citations=[],
-                        refusal_reason=f"خطأ من Gemini API: {res.status_code}",
+                        refusal_reason=PromptManager().get_api_error_refusal(locale, str(res.status_code)),
                         provider="gemini",
                         model_name=self.model_name,
                         filtered_chunks_count=len(filtered_docs),
@@ -159,12 +161,13 @@ class GeminiLLMProvider(LLMProvider):
                 data = res.json()
                 candidates = data.get("candidates", [])
                 if not candidates:
+                    locale = detect_locale(query)
                     return ClinicalLLMResponse(
                         is_in_scope=True,
                         is_knowledge_sufficient=False,
                         answer=None,
                         citations=[],
-                        refusal_reason="لم يتم التوصل لاستجابة من موديل Gemini.",
+                        refusal_reason=PromptManager().get_no_response_refusal(locale),
                         provider="gemini",
                         model_name=self.model_name,
                         filtered_chunks_count=len(filtered_docs),
@@ -209,10 +212,11 @@ class GeminiLLMProvider(LLMProvider):
                     answer = None
                     citations_list = []
                     if not refusal_reason:
+                        locale = detect_locale(query)
                         if not is_in_scope:
-                            refusal_reason = "عذراً، هذا السؤال خارج اختصاص المنظومة الطبية الخاصة بالإسعافات الأولية."
+                            refusal_reason = PromptManager().get_out_of_scope_refusal(locale)
                         else:
-                            refusal_reason = "عذراً، المعلومات الطبية المتاحة غير كافية لتقديم إجابة موثوقة في الإسعافات الأولية."
+                            refusal_reason = PromptManager().get_insufficient_evidence_refusal(locale)
 
                 return ClinicalLLMResponse(
                     is_in_scope=is_in_scope,
@@ -227,12 +231,13 @@ class GeminiLLMProvider(LLMProvider):
 
         except Exception as e:
             logger.error(f"Failed to generate response via Gemini: {e}")
+            locale = detect_locale(query)
             return ClinicalLLMResponse(
                 is_in_scope=True,
                 is_knowledge_sufficient=False,
                 answer=None,
                 citations=[],
-                refusal_reason=f"حدث خطأ أثناء التواصل مع Gemini: {str(e)}",
+                refusal_reason=PromptManager().get_general_error_refusal(locale, str(e)),
                 provider="gemini",
                 model_name=self.model_name,
                 filtered_chunks_count=len(filtered_docs),

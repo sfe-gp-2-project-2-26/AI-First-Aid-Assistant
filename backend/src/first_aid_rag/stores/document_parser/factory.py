@@ -22,12 +22,4 @@ class DocumentParserFactory:
             logger.info("DocumentParserFactory: using remote Docling provider.")
             return DoclingProvider()
 
-        if kind == DocumentParserType.LOCAL.value:
-            from first_aid_rag.stores.document_parser.providers.local_docling import (
-                LocalDoclingProvider,
-            )
-
-            logger.info("DocumentParserFactory: using local Docling provider.")
-            return LocalDoclingProvider()
-
         raise ValueError(f"Unsupported document parser type: {kind!r}")

@@ -12,7 +12,7 @@ class VectorStore(ABC):
         pass
 
     @abstractmethod
-    def upsert_points(self, chunks: List[DocumentChunk], embeddings: List[EmbeddingResult]) -> int:
+    def upsert_document_chunks(self, chunks: List[DocumentChunk]) -> int:
         """Upsert document chunks and their corresponding embeddings into the collection.
         Returns the count of vectors stored.
         """

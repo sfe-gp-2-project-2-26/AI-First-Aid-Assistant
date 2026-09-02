@@ -1,23 +1,17 @@
-from enum import Enum
+from first_aid_rag.models.enums.provider_types import (
+    EmbeddingProviderType,
+    LLMProviderType,
+    VectorDBProviderType,
+    DocumentParserType,
+    STTProviderType,
+)
+from first_aid_rag.models.enums.ingestion_status import IngestionStatus
 
-
-class EmbeddingProviderType(str, Enum):
-    LOCAL = "local"
-    REMOTE = "remote"
-
-
-class LLMProviderType(str, Enum):
-    GEMINI = "gemini"
-
-
-class VectorDBProviderType(str, Enum):
-    QDRANT = "qdrant"
-
-
-class DocumentParserType(str, Enum):
-    LOCAL = "local"
-    REMOTE = "remote"
-
-
-class STTProviderType(str, Enum):
-    GROQ = "groq"
+__all__ = [
+    "EmbeddingProviderType",
+    "LLMProviderType",
+    "VectorDBProviderType",
+    "DocumentParserType",
+    "STTProviderType",
+    "IngestionStatus",
+]

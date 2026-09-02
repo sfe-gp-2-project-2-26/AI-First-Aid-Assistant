@@ -2,7 +2,6 @@ import logging
 from fastapi import APIRouter, UploadFile, File, Depends
 from first_aid_rag.controllers.ingestion_controller import IngestionController
 from first_aid_rag.services.document_service import DocumentService
-from first_aid_rag.services.vector_store_service import VectorStoreService
 from first_aid_rag.stores.document_parser.factory import DocumentParserFactory
 from first_aid_rag.stores.embedding.factory import EmbeddingFactory
 from first_aid_rag.stores.vector_db.factory import VectorDBFactory
@@ -17,12 +16,12 @@ def get_ingestion_controller() -> IngestionController:
     """Dependency provider building the IngestionController via factories (DIP)."""
     embedding_provider = EmbeddingFactory().create()
     parser = DocumentParserFactory().create()
-    vector_store_service = VectorStoreService(vector_store=VectorDBFactory().create())
+    vector_store = VectorDBFactory().create()
 
     document_service = DocumentService(
+        vector_store=vector_store,
         parser=parser,
         embedding_provider=embedding_provider,
-        vector_store_service=vector_store_service,
     )
     return IngestionController(document_service=document_service)
 

@@ -26,12 +26,4 @@ class EmbeddingFactory:
             logger.info("EmbeddingFactory: using remote embedding provider (%s)", settings.EMBEDDING_URL)
             return RemoteEmbeddingProvider()
 
-        if kind == EmbeddingProviderType.LOCAL.value:
-            from first_aid_rag.stores.embedding.providers.local_embedding import (
-                LocalEmbeddingProvider,
-            )
-
-            logger.info("EmbeddingFactory: using local embedding provider (%s)", settings.EMBEDDING_MODEL)
-            return LocalEmbeddingProvider()
-
         raise ValueError(f"Unsupported embedding provider type: {kind!r}")

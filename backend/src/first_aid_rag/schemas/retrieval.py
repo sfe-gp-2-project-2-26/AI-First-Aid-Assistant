@@ -1,5 +1,6 @@
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
+from first_aid_rag.schemas.common import BaseQueryRequest
 
 
 class RankedDocument(BaseModel):
@@ -11,10 +12,9 @@ class RankedDocument(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
-class SearchRequest(BaseModel):
+class SearchRequest(BaseQueryRequest):
     """Retrieval search endpoint request payload."""
-
-    query: str = Field(..., min_length=1, description="Clinical query string")
+    pass
 
 
 class SearchResult(BaseModel):
