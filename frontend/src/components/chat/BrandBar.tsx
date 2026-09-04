@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MapPin, Plus, Settings2 } from "lucide-react";
+import { MapPin, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import logo from "@/assets/logo.png";
@@ -10,15 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DEFAULT_API_BASE_URL, getApiBaseUrl, setApiBaseUrl } from "@/lib/clinical-api";
 
-export function BrandBar({
-  onReset,
-  canReset,
-  actions,
-}: {
-  onReset: () => void;
-  canReset: boolean;
-  actions?: ReactNode;
-}) {
+export function BrandBar({ actions }: { actions?: ReactNode }) {
   const [baseUrl, setBaseUrl] = useState(DEFAULT_API_BASE_URL);
   const [saved, setSaved] = useState(false);
 
@@ -47,17 +39,6 @@ export function BrandBar({
               <span className="hidden sm:inline">Hospitals</span>
             </Link>
           </Button>
-          {canReset && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onReset}
-              className="hidden text-muted-foreground sm:inline-flex"
-            >
-              <Plus className="size-4" />
-              New conversation
-            </Button>
-          )}
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Backend settings">

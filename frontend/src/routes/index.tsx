@@ -194,8 +194,6 @@ function ChatPage() {
       />
       <div className="flex h-dvh flex-col bg-background w-full">
         <BrandBar
-          canReset={hasConversation && !isLoading}
-          onReset={handleNewChat}
           actions={
             <>
               <SidebarTrigger className="md:hidden mr-2" />
