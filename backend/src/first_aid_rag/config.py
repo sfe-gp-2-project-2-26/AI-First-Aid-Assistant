@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     MIN_SIMILARITY_SCORE_THRESHOLD: float = 80.0
     ARABIC_MIN_SIMILARITY_SCORE_THRESHOLD: float = 75.0
 
+
     model_config = {
         "env_file": str(ENV_FILE_PATH) if ENV_FILE_PATH.exists() else ".env",
         "extra": "ignore",

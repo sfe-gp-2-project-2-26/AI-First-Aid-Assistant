@@ -87,6 +87,7 @@ class RetrievalService:
         """Execute end-to-end retrieval flow: embed -> hybrid search -> RRF fusion."""
         from first_aid_rag.prompts import detect_locale
 
+
         clean_query = query.strip()
         logger.info("Retrieval started for query (length: %d chars)", len(clean_query))
 
@@ -102,6 +103,8 @@ class RetrievalService:
         else:
             sparse_indices = query_embedding.sparse_indices
             sparse_values = query_embedding.sparse_values
+        sparse_indices = query_embedding.sparse_indices
+        sparse_values = query_embedding.sparse_values
 
         # 2. Hybrid vector search in Qdrant
         dense_hits, sparse_hits = self.vector_store.hybrid_search(
@@ -152,6 +155,8 @@ class RetrievalService:
                     section=meta.get("section", ""),
                     recommendation_id=meta.get("recommendation_id"),
                     is_table=meta.get("is_table", False),
+                    evidence_level=meta.get("evidence_level"),
+                    recommendation_class=meta.get("recommendation_class"),
                 )
             )
 

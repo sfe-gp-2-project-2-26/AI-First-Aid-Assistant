@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from first_aid_rag.schemas.llm import ClinicalLLMResponse
+from first_aid_rag.schemas.query_processing import ProcessedQuery
 
 
 class LLMProvider(ABC):
@@ -17,13 +18,8 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def is_query_in_scope(self, query: str) -> bool:
-        """Fast preliminary check to see if the query is in the scope of first aid/emergencies."""
-        pass
-
-    @abstractmethod
-    async def translate_to_english(self, text: str) -> str:
-        """Translate the given text to English."""
+    async def process_query(self, query: str) -> ProcessedQuery:
+        """Process the query: detect locale, check scope, translate, rewrite, and classify topic."""
         pass
 
     @abstractmethod

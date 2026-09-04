@@ -5,6 +5,8 @@ import httpx
 
 from first_aid_rag.interfaces.llm_interface import LLMProvider
 from first_aid_rag.schemas.llm import ClinicalLLMResponse, Citation
+from first_aid_rag.schemas.query_processing import ProcessedQuery
+from first_aid_rag.models.enums.first_aid_topics import FirstAidTopic
 from first_aid_rag.config import settings
 from first_aid_rag.prompts.manager import PromptManager, detect_locale
 
@@ -37,6 +39,8 @@ class GeminiLLMProvider(LLMProvider):
             pdf_page = doc.get("pdf_page", 1)
             section = doc.get("section", "")
             rec_id = doc.get("recommendation_id") or "N/A"
+            rec_class = doc.get("recommendation_class") or "N/A"
+            evidence_lvl = doc.get("evidence_level") or "N/A"
             score = doc.get("percentage_score", 0.0)
 
             source = doc.get("source", "")
@@ -45,6 +49,8 @@ class GeminiLLMProvider(LLMProvider):
                 f"chunk_id: {chunk_id}\n"
                 f"source_file: {source}\n"
                 f"recommendation_id: {rec_id}\n"
+                f"recommendation_class: {rec_class}\n"
+                f"evidence_level: {evidence_lvl}\n"
                 f"pdf_page: {pdf_page}\n"
                 f"section: {section}\n"
                 f"confidence_score: {score}%\n"
@@ -117,7 +123,7 @@ class GeminiLLMProvider(LLMProvider):
                     "description": "Polite refusal message in user's query language if out of scope or insufficient knowledge."
                 }
             },
-            "required": ["is_in_scope", "is_knowledge_sufficient"]
+            "required": ["is_in_scope", "is_knowledge_sufficient", "citations"]
         }
 
         payload = {
@@ -243,32 +249,47 @@ class GeminiLLMProvider(LLMProvider):
                 filtered_chunks_count=len(filtered_docs),
             )
 
-    async def is_query_in_scope(self, query: str) -> bool:
-        """Fast preliminary check to see if the query is in the scope of first aid/emergencies."""
+    async def process_query(self, query: str) -> ProcessedQuery:
+        """Process the query: detect locale, check scope, translate, rewrite, and classify topic."""
+        locale = detect_locale(query)
+        
         if not self.api_key:
-            return True  # Fallback to true if no key, generation will handle the error
+            return ProcessedQuery(
+                original_query=query,
+                processed_query=query,
+                locale=locale,
+                is_in_scope=True,
+                topic_category=FirstAidTopic.GENERAL_APPROACH,
+                refusal_reason=None,
+            )
             
         json_schema = {
             "type": "OBJECT",
             "properties": {
-                "in_scope": {
-                    "type": "BOOLEAN",
-                    "description": "True if the query is related to first aid, medical emergencies, triage, trauma, or CPR. False otherwise."
-                }
+                "is_in_scope": {"type": "BOOLEAN"},
+                "topic_category": {
+                    "type": "STRING",
+                    "enum": [t.value for t in FirstAidTopic],
+                },
+                "processed_query": {
+                    "type": "STRING",
+                    "description": "English, highly optimized search query for vector retrieval.",
+                },
+                "refusal_reason": {"type": "STRING", "nullable": True},
             },
-            "required": ["in_scope"]
+            "required": ["is_in_scope", "topic_category", "processed_query"],
         }
         
         payload = {
-            "contents": [{"parts": [{"text": f"Query: {query}"}]}],
+            "contents": [{"parts": [{"text": f"User Query: {query}"}]}],
             "systemInstruction": {
-                "parts": [{"text": "You are a classifier. Determine if the user's query is about first aid or medical emergencies."}]
+                "parts": [{"text": PromptManager().get_query_processing_prompt(locale)}]
             },
             "generationConfig": {
                 "temperature": 0.0,
                 "responseMimeType": "application/json",
-                "responseSchema": json_schema
-            }
+                "responseSchema": json_schema,
+            },
         }
         
         url = f"{self.base_url}?key={self.api_key}"
@@ -279,51 +300,44 @@ class GeminiLLMProvider(LLMProvider):
                     data = res.json()
                     raw_json_str = data["candidates"][0]["content"]["parts"][0]["text"]
                     parsed = json.loads(raw_json_str)
-                    is_in_scope = bool(parsed.get("in_scope", False))
-                return is_in_scope
-                
-        except Exception as e:
-            logger.error(f"Failed to check scope via Gemini: {e}")
-            return True  # Fallback to True if scope check fails
-
-    async def translate_to_english(self, text: str) -> str:
-        """Translate the given text to English directly."""
-        if not self.api_key:
-            return text
-            
-        system_instruction = "You are a professional medical translator. Translate the given text to English accurately and directly without any additional explanation."
-        
-        payload = {
-            "system_instruction": {
-                "parts": [{"text": system_instruction}]
-            },
-            "contents": [{
-                "role": "user",
-                "parts": [{"text": text}]
-            }],
-            "generationConfig": {
-                "temperature": 0.0,
-            }
-        }
-
-        headers = {"Content-Type": "application/json"}
-        url = f"{self.base_url}?key={self.api_key}"
-
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                resp = await client.post(url, headers=headers, json=payload)
-                resp.raise_for_status()
-                data = resp.json()
-                
-                candidates = data.get("candidates", [])
-                if not candidates:
-                    return text
                     
-                english_text = candidates[0]["content"]["parts"][0]["text"].strip()
-                return english_text
+                    is_in_scope = bool(parsed.get("is_in_scope", False))
+                    processed_query = parsed.get("processed_query", query)
+                    topic_str = parsed.get("topic_category", FirstAidTopic.OUT_OF_SCOPE.value)
+                    
+                    try:
+                        topic = FirstAidTopic(topic_str)
+                    except ValueError:
+                        topic = FirstAidTopic.OUT_OF_SCOPE
+
+                    return ProcessedQuery(
+                        original_query=query,
+                        processed_query=processed_query,
+                        locale=locale,
+                        is_in_scope=is_in_scope,
+                        topic_category=topic,
+                        refusal_reason=parsed.get("refusal_reason"),
+                    )
+                else:
+                    logger.error(f"Gemini API error during process_query: {res.text}")
+                    return ProcessedQuery(
+                        original_query=query,
+                        processed_query=query,
+                        locale=locale,
+                        is_in_scope=True,
+                        topic_category=FirstAidTopic.GENERAL_APPROACH,
+                        refusal_reason=None,
+                    )
         except Exception as e:
-            logger.error(f"Failed to translate query via Gemini: {e}")
-            return text
+            logger.error(f"Failed to process query via Gemini: {e}")
+            return ProcessedQuery(
+                original_query=query,
+                processed_query=query,
+                locale=locale,
+                is_in_scope=True,
+                topic_category=FirstAidTopic.GENERAL_APPROACH,
+                refusal_reason=None,
+            )
 
     async def check_health(self) -> bool:
         """Check if Gemini API Key is configured and service endpoint is reachable."""

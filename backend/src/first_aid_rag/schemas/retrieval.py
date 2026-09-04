@@ -30,6 +30,8 @@ class SearchResult(BaseModel):
     section: Optional[str] = ""
     recommendation_id: Optional[str] = None
     is_table: bool = False
+    evidence_level: Optional[str] = None
+    recommendation_class: Optional[str] = None
 
 
 

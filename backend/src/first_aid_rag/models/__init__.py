@@ -5,6 +5,7 @@ from first_aid_rag.models.enums import (
     DocumentParserType,
     STTProviderType,
     IngestionStatus,
+    FirstAidTopic,
 )
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "DocumentParserType",
     "STTProviderType",
     "IngestionStatus",
+    "FirstAidTopic",
 ]
 

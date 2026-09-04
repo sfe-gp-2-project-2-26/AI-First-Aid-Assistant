@@ -6,8 +6,19 @@ from first_aid_rag.schemas.retrieval import SearchResponse, SearchResult
 
 @pytest.mark.asyncio
 async def test_out_of_scope_query_no_retrieval():
+    from first_aid_rag.schemas.query_processing import ProcessedQuery
+    from first_aid_rag.models.enums.first_aid_topics import FirstAidTopic
+
     mock_llm = AsyncMock()
     mock_llm.is_query_in_scope.return_value = False
+    mock_llm.process_query.return_value = ProcessedQuery(
+        original_query="What is the recipe for cake?",
+        processed_query="recipe for cake",
+        locale="en",
+        is_in_scope=False,
+        topic_category=FirstAidTopic.OUT_OF_SCOPE,
+        refusal_reason="Out of scope"
+    )
     
     mock_retrieval = AsyncMock()
     
@@ -28,9 +39,19 @@ async def test_out_of_scope_query_no_retrieval():
 
 @pytest.mark.asyncio
 async def test_zero_chunks_above_threshold_no_llm():
+    from first_aid_rag.schemas.query_processing import ProcessedQuery
+    from first_aid_rag.models.enums.first_aid_topics import FirstAidTopic
+
     mock_llm = AsyncMock()
     mock_llm.is_query_in_scope.return_value = True
     
+    mock_llm.process_query.return_value = ProcessedQuery(
+        original_query="How to do CPR?",
+        processed_query="CPR instructions",
+        locale="en",
+        is_in_scope=True,
+        topic_category=FirstAidTopic.CPR_ADULT,
+    )
     mock_retrieval = AsyncMock()
     # All chunks below 80%
     mock_retrieval.search.return_value = SearchResponse(
@@ -63,8 +84,18 @@ async def test_zero_chunks_above_threshold_no_llm():
 
 @pytest.mark.asyncio
 async def test_successful_response_passes_and_gate():
+    from first_aid_rag.schemas.query_processing import ProcessedQuery
+    from first_aid_rag.models.enums.first_aid_topics import FirstAidTopic
+
     mock_llm = AsyncMock()
     mock_llm.is_query_in_scope.return_value = True
+    mock_llm.process_query.return_value = ProcessedQuery(
+        original_query="How to do CPR?",
+        processed_query="CPR instructions",
+        locale="en",
+        is_in_scope=True,
+        topic_category=FirstAidTopic.CPR_ADULT,
+    )
     mock_llm.generate.return_value = ClinicalLLMResponse(
         is_in_scope=True,
         is_knowledge_sufficient=True,
@@ -105,10 +136,18 @@ async def test_successful_response_passes_and_gate():
     assert response.result.refusal_reason is None
 
 @pytest.mark.asyncio
-async def test_arabic_query_passes_at_75_threshold():
+async def test_arabic_query_processes_and_retrieves():
+    from first_aid_rag.schemas.query_processing import ProcessedQuery
+    from first_aid_rag.models.enums.first_aid_topics import FirstAidTopic
+
     mock_llm = AsyncMock()
-    mock_llm.is_query_in_scope.return_value = True
-    mock_llm.translate_to_english.return_value = "How to do CPR?"
+    mock_llm.process_query.return_value = ProcessedQuery(
+        original_query="كيف أقوم بالإنعاش القلبي؟",
+        processed_query="How to do CPR?",
+        locale="ar",
+        is_in_scope=True,
+        topic_category=FirstAidTopic.CPR_ADULT,
+    )
     mock_llm.generate.return_value = ClinicalLLMResponse(
         is_in_scope=True,
         is_knowledge_sufficient=True,
@@ -120,14 +159,13 @@ async def test_arabic_query_passes_at_75_threshold():
     )
     
     mock_retrieval = AsyncMock()
-    # Chunk with 76% score (would fail English 80% threshold, but passes Arabic 75% threshold)
     mock_retrieval.search.return_value = SearchResponse(
         query="كيف أقوم بالإنعاش القلبي؟",
         results=[
             SearchResult(
                 text="CPR Instructions", 
-                score=0.76, 
-                percentage_score=76.0, 
+                score=0.85, 
+                percentage_score=85.0, 
                 document_id="1",
                 source="cpr.pdf",
                 pdf_page=1,
@@ -140,7 +178,6 @@ async def test_arabic_query_passes_at_75_threshold():
         retrieval_service=mock_retrieval,
         llm_provider=mock_llm,
         min_score_threshold=80.0,
-        arabic_min_score_threshold=75.0,
     )
     
     response = await service.generate_response("كيف أقوم بالإنعاش القلبي؟")

@@ -34,3 +34,6 @@ class PromptManager:
 
     def get_missing_api_key_refusal(self, locale: str = "en") -> str:
         return _LOCALES.get(locale, en).REFUSAL_MISSING_API_KEY
+
+    def get_query_processing_prompt(self, locale: str = "en") -> str:
+        return getattr(_LOCALES.get(locale, en), "QUERY_PROCESSING_PROMPT", en.QUERY_PROCESSING_PROMPT)

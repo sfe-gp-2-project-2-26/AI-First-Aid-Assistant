@@ -29,21 +29,22 @@ class GenerationService:
         self.arabic_min_score_threshold = arabic_min_score_threshold
 
     async def generate_response(self, query: str) -> GenerateResponse:
-        """Execute clinical RAG generation pipeline: Intent Check -> Retrieval -> Filter Top 3 (>=80% or >=75% for Arabic) -> LLM + Citations -> AND Gate."""
+        """Execute clinical RAG generation pipeline: Query Processing -> Retrieval -> Filter Top 3 -> LLM + Citations -> AND Gate."""
         clean_query = query.strip()
         logger.info("Starting Clinical Generation Pipeline for query: '%.60s...'", clean_query)
 
-        # 0. Preliminary Fast Intent Check
-        is_in_scope = await self.llm_provider.is_query_in_scope(clean_query)
-        if not is_in_scope:
+        # 0. Preliminary Query Processing (Scope Check + Translate + Rewrite + Topic Classification)
+        processed_query_obj = await self.llm_provider.process_query(clean_query)
+        locale = processed_query_obj.locale
+
+        if not processed_query_obj.is_in_scope:
             logger.warning("Query rejected by preliminary scope check: '%.60s...'", clean_query)
-            locale = detect_locale(clean_query)
             refusal_result = ClinicalLLMResponse(
                 is_in_scope=False,
                 is_knowledge_sufficient=True,
                 answer=None,
                 citations=[],
-                refusal_reason=self.prompt_manager.get_out_of_scope_refusal(locale),
+                refusal_reason=processed_query_obj.refusal_reason or self.prompt_manager.get_out_of_scope_refusal(locale),
                 provider="gemini",
                 model_name=settings.GEMINI_MODEL,
                 filtered_chunks_count=0,
@@ -55,18 +56,10 @@ class GenerationService:
                 filtered_chunks_count=0,
             )
 
-        # Determine language and effective similarity score threshold
-        locale = detect_locale(clean_query)
-        effective_threshold = (
-            self.arabic_min_score_threshold if locale == "ar" else self.min_score_threshold
-        )
+        effective_threshold = self.min_score_threshold
 
         # 1. Retrieve candidates via Hybrid Vector Search + RRF Fusion
-        retrieval_query = clean_query
-        if locale == "ar":
-            retrieval_query = await self.llm_provider.translate_to_english(clean_query)
-            logger.info("Translated Arabic query to English for better Hybrid Search retrieval: '%s'", retrieval_query)
-            
+        retrieval_query = processed_query_obj.processed_query
         retrieval_response = await self.retrieval_service.search(query=retrieval_query)
         raw_results = retrieval_response.results
 
@@ -91,6 +84,8 @@ class GenerationService:
                     "section": item.section,
                     "recommendation_id": item.recommendation_id,
                     "is_table": item.is_table,
+                    "evidence_level": getattr(item, "evidence_level", None),
+                    "recommendation_class": getattr(item, "recommendation_class", None),
                 })
 
         retrieved_count = len(raw_results)
@@ -127,11 +122,22 @@ class GenerationService:
                 filtered_chunks_count=0,
             )
 
-        # 4. Invoke LLM Provider with top 3 filtered chunks
-        llm_response = await self.llm_provider.generate(
-            query=clean_query,
-            filtered_docs=top_3_candidates,
+        # 4. Format system prompt with Query Context
+        sys_instructions = self.prompt_manager.get_system_prompt(locale).format(
+            original_query=processed_query_obj.original_query,
+            processed_query=processed_query_obj.processed_query,
+            topic_category=processed_query_obj.topic_category.value
         )
+
+        # 5. Invoke LLM Provider with top 3 filtered chunks
+        llm_response = await self.llm_provider.generate(
+            query=processed_query_obj.original_query,
+            filtered_docs=top_3_candidates,
+            system_prompt=sys_instructions,
+        )
+        
+        # Override the original query in the parameter since we want the response to address the original query
+        llm_response_query = processed_query_obj.original_query
 
         # 5. Guardrail Layer 2: Local AND-Gate verification
         if not (llm_response.is_in_scope and llm_response.is_knowledge_sufficient):
@@ -139,14 +145,14 @@ class GenerationService:
             llm_response.answer = None
             llm_response.citations = []
             
-            locale = detect_locale(clean_query)
+            locale = detect_locale(llm_response_query)
             if not llm_response.is_in_scope:
                 llm_response.refusal_reason = self.prompt_manager.get_out_of_scope_refusal(locale)
             else:
                 llm_response.refusal_reason = self.prompt_manager.get_insufficient_evidence_refusal(locale)
 
         return GenerateResponse(
-            query=clean_query,
+            query=llm_response_query,
             result=llm_response,
             retrieved_chunks_count=retrieved_count,
             filtered_chunks_count=selected_count,
