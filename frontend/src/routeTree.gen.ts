@@ -11,9 +11,19 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HospitalsRouteImport } from './routes/hospitals'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
+import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
+import { Route as ApiAuthMeRouteImport } from './routes/api/auth/me'
+import { Route as ApiAuthRegisterRouteImport } from './routes/api/auth/register'
+import { Route as ApiBackendChatRouteImport } from './routes/api/backend/chat'
 import { Route as ApiBackendGenerateRouteImport } from './routes/api/backend/generate'
+import { Route as ApiBackendHospitalsRouteImport } from './routes/api/backend/hospitals'
 import { Route as ApiBackendIngestRouteImport } from './routes/api/backend/ingest'
 import { Route as ApiBackendTranscribeRouteImport } from './routes/api/backend/transcribe'
+import { Route as ApiBackendConversationsIndexRouteImport } from './routes/api/backend/conversations/index'
+import { Route as ApiBackendConversationsConversation_idRouteImport } from './routes/api/backend/conversations/$conversation_id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -25,9 +35,49 @@ const HospitalsRoute = HospitalsRouteImport.update({
   path: '/hospitals',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
+  id: '/api/auth/login',
+  path: '/api/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
+  id: '/api/auth/logout',
+  path: '/api/auth/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthMeRoute = ApiAuthMeRouteImport.update({
+  id: '/api/auth/me',
+  path: '/api/auth/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthRegisterRoute = ApiAuthRegisterRouteImport.update({
+  id: '/api/auth/register',
+  path: '/api/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBackendChatRoute = ApiBackendChatRouteImport.update({
+  id: '/api/backend/chat',
+  path: '/api/backend/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiBackendGenerateRoute = ApiBackendGenerateRouteImport.update({
   id: '/api/backend/generate',
   path: '/api/backend/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBackendHospitalsRoute = ApiBackendHospitalsRouteImport.update({
+  id: '/api/backend/hospitals',
+  path: '/api/backend/hospitals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiBackendIngestRoute = ApiBackendIngestRouteImport.update({
@@ -40,59 +90,141 @@ const ApiBackendTranscribeRoute = ApiBackendTranscribeRouteImport.update({
   path: '/api/backend/transcribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBackendConversationsIndexRoute =
+  ApiBackendConversationsIndexRouteImport.update({
+    id: '/api/backend/conversations/',
+    path: '/api/backend/conversations/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiBackendConversationsConversation_idRoute =
+  ApiBackendConversationsConversation_idRouteImport.update({
+    id: '/api/backend/conversations/$conversation_id',
+    path: '/api/backend/conversations/$conversation_id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/hospitals': typeof HospitalsRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/me': typeof ApiAuthMeRoute
+  '/api/auth/register': typeof ApiAuthRegisterRoute
+  '/api/backend/chat': typeof ApiBackendChatRoute
   '/api/backend/generate': typeof ApiBackendGenerateRoute
+  '/api/backend/hospitals': typeof ApiBackendHospitalsRoute
   '/api/backend/ingest': typeof ApiBackendIngestRoute
   '/api/backend/transcribe': typeof ApiBackendTranscribeRoute
+  '/api/backend/conversations/$conversation_id': typeof ApiBackendConversationsConversation_idRoute
+  '/api/backend/conversations/': typeof ApiBackendConversationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/hospitals': typeof HospitalsRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/me': typeof ApiAuthMeRoute
+  '/api/auth/register': typeof ApiAuthRegisterRoute
+  '/api/backend/chat': typeof ApiBackendChatRoute
   '/api/backend/generate': typeof ApiBackendGenerateRoute
+  '/api/backend/hospitals': typeof ApiBackendHospitalsRoute
   '/api/backend/ingest': typeof ApiBackendIngestRoute
   '/api/backend/transcribe': typeof ApiBackendTranscribeRoute
+  '/api/backend/conversations/$conversation_id': typeof ApiBackendConversationsConversation_idRoute
+  '/api/backend/conversations': typeof ApiBackendConversationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/hospitals': typeof HospitalsRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/me': typeof ApiAuthMeRoute
+  '/api/auth/register': typeof ApiAuthRegisterRoute
+  '/api/backend/chat': typeof ApiBackendChatRoute
   '/api/backend/generate': typeof ApiBackendGenerateRoute
+  '/api/backend/hospitals': typeof ApiBackendHospitalsRoute
   '/api/backend/ingest': typeof ApiBackendIngestRoute
   '/api/backend/transcribe': typeof ApiBackendTranscribeRoute
+  '/api/backend/conversations/$conversation_id': typeof ApiBackendConversationsConversation_idRoute
+  '/api/backend/conversations/': typeof ApiBackendConversationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/hospitals'
+    | '/login'
+    | '/register'
+    | '/api/auth/login'
+    | '/api/auth/logout'
+    | '/api/auth/me'
+    | '/api/auth/register'
+    | '/api/backend/chat'
     | '/api/backend/generate'
+    | '/api/backend/hospitals'
     | '/api/backend/ingest'
     | '/api/backend/transcribe'
+    | '/api/backend/conversations/$conversation_id'
+    | '/api/backend/conversations/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/hospitals'
+    | '/login'
+    | '/register'
+    | '/api/auth/login'
+    | '/api/auth/logout'
+    | '/api/auth/me'
+    | '/api/auth/register'
+    | '/api/backend/chat'
     | '/api/backend/generate'
+    | '/api/backend/hospitals'
     | '/api/backend/ingest'
     | '/api/backend/transcribe'
+    | '/api/backend/conversations/$conversation_id'
+    | '/api/backend/conversations'
   id:
     | '__root__'
     | '/'
     | '/hospitals'
+    | '/login'
+    | '/register'
+    | '/api/auth/login'
+    | '/api/auth/logout'
+    | '/api/auth/me'
+    | '/api/auth/register'
+    | '/api/backend/chat'
     | '/api/backend/generate'
+    | '/api/backend/hospitals'
     | '/api/backend/ingest'
     | '/api/backend/transcribe'
+    | '/api/backend/conversations/$conversation_id'
+    | '/api/backend/conversations/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HospitalsRoute: typeof HospitalsRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  ApiAuthLoginRoute: typeof ApiAuthLoginRoute
+  ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiAuthMeRoute: typeof ApiAuthMeRoute
+  ApiAuthRegisterRoute: typeof ApiAuthRegisterRoute
+  ApiBackendChatRoute: typeof ApiBackendChatRoute
   ApiBackendGenerateRoute: typeof ApiBackendGenerateRoute
+  ApiBackendHospitalsRoute: typeof ApiBackendHospitalsRoute
   ApiBackendIngestRoute: typeof ApiBackendIngestRoute
   ApiBackendTranscribeRoute: typeof ApiBackendTranscribeRoute
+  ApiBackendConversationsConversation_idRoute: typeof ApiBackendConversationsConversation_idRoute
+  ApiBackendConversationsIndexRoute: typeof ApiBackendConversationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -111,11 +243,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HospitalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/login': {
+      id: '/api/auth/login'
+      path: '/api/auth/login'
+      fullPath: '/api/auth/login'
+      preLoaderRoute: typeof ApiAuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/logout': {
+      id: '/api/auth/logout'
+      path: '/api/auth/logout'
+      fullPath: '/api/auth/logout'
+      preLoaderRoute: typeof ApiAuthLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/me': {
+      id: '/api/auth/me'
+      path: '/api/auth/me'
+      fullPath: '/api/auth/me'
+      preLoaderRoute: typeof ApiAuthMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/register': {
+      id: '/api/auth/register'
+      path: '/api/auth/register'
+      fullPath: '/api/auth/register'
+      preLoaderRoute: typeof ApiAuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/backend/chat': {
+      id: '/api/backend/chat'
+      path: '/api/backend/chat'
+      fullPath: '/api/backend/chat'
+      preLoaderRoute: typeof ApiBackendChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/backend/generate': {
       id: '/api/backend/generate'
       path: '/api/backend/generate'
       fullPath: '/api/backend/generate'
       preLoaderRoute: typeof ApiBackendGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/backend/hospitals': {
+      id: '/api/backend/hospitals'
+      path: '/api/backend/hospitals'
+      fullPath: '/api/backend/hospitals'
+      preLoaderRoute: typeof ApiBackendHospitalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/backend/ingest': {
@@ -132,26 +320,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBackendTranscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/backend/conversations/': {
+      id: '/api/backend/conversations/'
+      path: '/api/backend/conversations'
+      fullPath: '/api/backend/conversations/'
+      preLoaderRoute: typeof ApiBackendConversationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/backend/conversations/$conversation_id': {
+      id: '/api/backend/conversations/$conversation_id'
+      path: '/api/backend/conversations/$conversation_id'
+      fullPath: '/api/backend/conversations/$conversation_id'
+      preLoaderRoute: typeof ApiBackendConversationsConversation_idRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HospitalsRoute: HospitalsRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  ApiAuthLoginRoute: ApiAuthLoginRoute,
+  ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiAuthMeRoute: ApiAuthMeRoute,
+  ApiAuthRegisterRoute: ApiAuthRegisterRoute,
+  ApiBackendChatRoute: ApiBackendChatRoute,
   ApiBackendGenerateRoute: ApiBackendGenerateRoute,
+  ApiBackendHospitalsRoute: ApiBackendHospitalsRoute,
   ApiBackendIngestRoute: ApiBackendIngestRoute,
   ApiBackendTranscribeRoute: ApiBackendTranscribeRoute,
+  ApiBackendConversationsConversation_idRoute:
+    ApiBackendConversationsConversation_idRoute,
+  ApiBackendConversationsIndexRoute: ApiBackendConversationsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
