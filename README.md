@@ -4,19 +4,30 @@ An intelligent First Aid and Emergency Clinical Decision Support System based on
 
 ## System Architecture Overview
 
-The application is structured into three decoupled components:
-- Frontend (`frontend/`): React application with TypeScript, Vite, Tailwind CSS, and shadcn/ui.
-- Backend (`backend/`): Production-ready FastAPI service following Clean Architecture (Routes, Controllers, Services, Stores, and Interfaces) with automated unit and integration tests.
-- Remote Microservice: GPU-accelerated microservice hosting the embedding and document parsing models.
+The application is structured into a microservices architecture:
+
+- **Frontend (`frontend/`)**: React application using TanStack Router, TypeScript, Vite, Tailwind CSS, and shadcn/ui. Acts as a BFF (Backend For Frontend) proxy to securely manage cookies and CORS.
+- **Auth & Session Backend (`auth-backend/`)**: Node.js/Express service backed by MongoDB that handles JWT authentication, secure HttpOnly cookie issuance, user registration with strong password validation, and multi-session conversation history (renaming, deleting, loading past chats).
+- **Core Clinical Backend (`backend/`)**: Production-ready FastAPI Python service following Clean Architecture that handles RAG retrieval, Qdrant integration, LLM generation, and Audio transcription.
+- **Remote Microservice**: GPU-accelerated microservice hosting the BGE-M3 embedding and document parsing models.
+
+## Key Features
+
+- **Hybrid RAG Search**: Dense and Sparse vector search utilizing Reciprocal Rank Fusion.
+- **User Authentication**: JWT-based auth via HttpOnly cookies with strong password validation (Min 8 chars, uppercase, lowercase, numbers, symbols).
+- **Persistent Chat Sessions**: Authenticated users have their conversation history saved in MongoDB. Includes ability to seamlessly switch between, rename, or delete past sessions via the sidebar.
+- **Guest Mode**: Unauthenticated users can use the core assistant features without history persistence.
+- **Voice Inputs**: Uses Groq Whisper API for rapid speech-to-text input.
 
 ## Prerequisites & Required API Keys
 
 You only need to have the following:
-1. Docker Desktop: Required to run the Qdrant vector database or full containerized deployment. Ensure Docker Desktop is open and running.
-2. Active API Credentials:
+
+1. **Docker Desktop**: Required to run the full containerized deployment (Qdrant, MongoDB, Frontend, Auth Node, FastAPI). Ensure Docker Desktop is open and running.
+2. **Active API Credentials**:
    - Google Gemini API Key (for clinical LLM generation).
    - Groq API Key (for speech-to-text Whisper audio transcription).
-3. The Remote Colab Microservice running.
+3. **The Remote Colab Microservice running**.
 
 ## Required Pre-run Step: Colab Microservice
 
@@ -42,8 +53,10 @@ Edit `backend/.env` and insert your API keys and the Colab URL:
 GEMINI_API_KEY=your_gemini_api_key_here
 GROQ_API_KEY=your_groq_api_key_here
 EMBEDDING_URL=https://your-colab-ngrok-url.ngrok-free.app
-QDRANT_URL=http://localhost:6333
+QDRANT_URL=http://qdrant:6333
 ```
+
+_(Note: The auth-backend uses a default hardcoded `JWT_SECRET_KEY` inside `docker-compose.yml`, which can be overridden by an environment variable in production)._
 
 ## Running the Application
 
@@ -53,15 +66,18 @@ Make sure Docker Desktop is running, then execute from the repository root:
 docker compose up --build
 ```
 
-Services will be available at:
-- Frontend: http://localhost:8080
-- Backend API: http://localhost:3000
-- Qdrant Vector Store: http://localhost:6333
-- Interactive API Documentation: http://localhost:3000/docs
+Services will be spun up and available at:
+
+- **Frontend UI**: http://localhost:8080
+- **Auth Node Backend**: http://localhost:4000
+- **FastAPI Core Backend**: http://localhost:3000
+- **MongoDB**: mongodb://localhost:27017
+- **Qdrant Vector Store**: http://localhost:6333
+- **Interactive API Documentation (FastAPI)**: http://localhost:3000/docs
 
 ## Running Tests
 
-Run the full automated test suite using `uv`:
+Run the full automated test suite for the core Python backend using `uv`:
 
 ```bash
 cd backend
