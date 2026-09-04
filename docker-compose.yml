@@ -7,6 +7,14 @@ services:
       - qdrant_data:/qdrant/storage
     restart: unless-stopped
 
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
   backend:
     build: ./backend
     env_file:
@@ -22,19 +30,37 @@ services:
       - qdrant
     restart: unless-stopped
 
+  auth-backend:
+    build: ./auth-backend
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/firstaid
+      PYTHON_BACKEND_URL: http://backend:3000
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your_super_secret_jwt_key_here}
+      FRONTEND_URL: http://localhost:8080
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongodb
+      - backend
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
       BACKEND_URL: http://backend:3000
+      AUTH_BACKEND_URL: http://auth-backend:4000
       VITE_AMBULANCE_NUMBER: ${VITE_AMBULANCE_NUMBER:-123}
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     ports:
       - "8080:8080"
     depends_on:
       - backend
+      - auth-backend
     restart: unless-stopped
 
 volumes:
   qdrant_data:
+  mongo_data:
