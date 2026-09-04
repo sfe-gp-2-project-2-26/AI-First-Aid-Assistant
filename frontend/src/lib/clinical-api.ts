@@ -75,7 +75,7 @@ function messageFromPayload(payload: unknown, status: number): string {
     if (typeof detail === "string") return detail;
     if (Array.isArray(detail)) {
       const msgs = (detail as ValidationDetail[]).map((d) => d.msg).filter(Boolean);
-      if (msgs.length) return msgs.join(" · ");
+      if (msgs.length) return msgs.join(" - ");
     }
   }
   if (status === 422) return "Your question could not be processed. Please rephrase it.";
@@ -83,14 +83,16 @@ function messageFromPayload(payload: unknown, status: number): string {
   return `Request failed (${status}).`;
 }
 
-/** Calls the backend through the app's own proxy route (avoids CORS / ngrok interstitial). */
-export async function generateGuidance(query: string): Promise<GenerateResponse> {
+export type ChatResponse = GenerateResponse & { conversation_id?: string | null };
+
+/** Calls the auth-backend through the app's own proxy route (avoids CORS). */
+export async function generateGuidance(query: string, conversation_id?: string | null): Promise<ChatResponse> {
   let response: Response;
   try {
-    response = await fetch("/api/backend/generate", {
+    response = await fetch("/api/backend/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, baseUrl: getApiBaseUrlOverride() ?? undefined }),
+      body: JSON.stringify({ query, conversation_id, baseUrl: getApiBaseUrlOverride() ?? undefined }),
     });
   } catch {
     throw new ClinicalApiError(
@@ -110,7 +112,7 @@ export async function generateGuidance(query: string): Promise<GenerateResponse>
   if (!payload || typeof payload !== "object" || !("result" in payload)) {
     throw new ClinicalApiError("The clinical assistant returned an unexpected response.");
   }
-  return payload as GenerateResponse;
+  return payload as ChatResponse;
 }
 
 export type IngestionResponse = {
