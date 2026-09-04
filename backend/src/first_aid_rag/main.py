@@ -1,4 +1,5 @@
 import logging
+import uvicorn
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,6 +52,4 @@ def health_check():
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run("first_aid_rag.main:app", host="0.0.0.0", port=3000, reload=True)

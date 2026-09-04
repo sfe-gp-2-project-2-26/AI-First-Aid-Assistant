@@ -20,13 +20,11 @@ class GenerationService:
         llm_provider: Optional[LLMProvider] = None,
         prompt_manager: Optional[PromptManager] = None,
         min_score_threshold: float = settings.MIN_SIMILARITY_SCORE_THRESHOLD,
-        arabic_min_score_threshold: float = settings.ARABIC_MIN_SIMILARITY_SCORE_THRESHOLD,
     ):
         self.retrieval_service = retrieval_service or RetrievalService()
         self.llm_provider = llm_provider or LLMFactory().create()
         self.prompt_manager = prompt_manager or PromptManager()
         self.min_score_threshold = min_score_threshold
-        self.arabic_min_score_threshold = arabic_min_score_threshold
 
     async def generate_response(self, query: str) -> GenerateResponse:
         """Execute clinical RAG generation pipeline: Query Processing -> Retrieval -> Filter Top 3 -> LLM + Citations -> AND Gate."""

@@ -1,17 +1,16 @@
 import { PhoneCall } from "lucide-react";
 
-import { useIsMobileDevice } from "@/hooks/use-mobile-device";
-
 /**
- * Mobile-only emergency call button. Rendered as a tel: link so the phone
- * OS opens the dialer with the configured number. Hidden entirely on
- * desktop, where placing a call is not possible.
+ * Emergency call button. Rendered as a tel: link so the OS opens the
+ * appropriate app:
+ *  - Mobile  → opens the phone dialer directly.
+ *  - Windows → triggers the system "Open with" prompt (e.g. Phone Link).
+ *  - Other desktops → browser / OS handles the tel: protocol as configured.
  */
 export function CallAmbulanceButton() {
-  const isMobile = useIsMobileDevice();
   const number = (import.meta.env["VITE_AMBULANCE_NUMBER"] ?? "").trim();
 
-  if (!isMobile || !number) return null;
+  if (!number) return null;
 
   return (
     <a

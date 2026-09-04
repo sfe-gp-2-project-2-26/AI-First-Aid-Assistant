@@ -40,6 +40,16 @@ After running all cells in the notebook, copy the generated public URL (e.g., yo
 
 ## Environment Configuration
 
+### 1. Root Environment (Frontend & Docker Compose)
+
+Create the root environment file from the example:
+
+```bash
+cp .env.example .env
+```
+
+### 2. Backend Environment
+
 Create the backend environment file from the provided example:
 
 ```bash

@@ -7,6 +7,11 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    // Read .env from the monorepo root instead of the frontend sub-folder,
+    // so VITE_* variables don't need to be duplicated in frontend/.env.
+    envDir: "../",
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
