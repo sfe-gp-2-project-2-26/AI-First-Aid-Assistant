@@ -14,6 +14,8 @@ services:
     environment:
       # inside compose, reach Qdrant by service name
       QDRANT_URL: http://qdrant:6333
+    volumes:
+      - ./backend/assets:/app/assets
     ports:
       - "3000:3000"
     depends_on:

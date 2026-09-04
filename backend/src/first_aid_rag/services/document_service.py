@@ -34,7 +34,7 @@ class DocumentService:
         file_hash, file_path, file_exists = self.storage_service.save_file(content)
 
         from first_aid_rag.models.enums import IngestionStatus
-        # Check if already ingested in Vector Store
+        # Check if already ingested in Vector Store and exists on disk
         if file_exists and self.vector_store.document_exists(file_hash):
             logger.info(f"Document {file_name} (hash: {file_hash}) already ingested. Returning early response.")
             return IngestionResponse(
@@ -45,6 +45,11 @@ class DocumentService:
                 vectors_stored=0,
                 message="Document already ingested in assets storage and vector store.",
             )
+
+        # If file was deleted from assets on disk, purge any old vectors from Vector Store before re-ingestion
+        if self.vector_store.document_exists(file_hash):
+            logger.info(f"Document {file_name} (hash: {file_hash}) was removed from assets on disk. Purging old vector points before re-ingestion.")
+            self.vector_store.delete_document(file_hash)
 
         # Step 2: Run PDF Chunking & Embedding Pipeline (Remote)
         logger.info(

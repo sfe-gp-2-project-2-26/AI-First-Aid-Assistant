@@ -24,6 +24,11 @@ class VectorStore(ABC):
         pass
 
     @abstractmethod
+    def delete_document(self, document_id: str) -> None:
+        """Delete all points associated with a document_id from the vector store."""
+        pass
+
+    @abstractmethod
     def hybrid_search(
         self,
         dense_vector: List[float],

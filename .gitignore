@@ -69,3 +69,8 @@ dist-ssr
 
 # Lovable Platform
 .lovable/
+
+# Uploaded Assets
+backend/assets/*.pdf
+assets/*.pdf
+!backend/assets/.gitkeep

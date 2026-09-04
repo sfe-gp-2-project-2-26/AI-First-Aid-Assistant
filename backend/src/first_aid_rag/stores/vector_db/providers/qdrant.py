@@ -76,7 +76,26 @@ class QdrantProvider(VectorStore):
         except Exception:
             return False
 
-
+    def delete_document(self, document_id: str) -> None:
+        """Delete all points associated with a document_id (file hash) from the collection."""
+        try:
+            self.ensure_collection()
+            self.client.delete(
+                collection_name=self.collection_name,
+                points_selector=models.FilterSelector(
+                    filter=models.Filter(
+                        must=[
+                            models.FieldCondition(
+                                key="document_id",
+                                match=models.MatchValue(value=document_id),
+                            )
+                        ]
+                    )
+                ),
+            )
+            logger.info(f"Successfully deleted vectors for document_id '{document_id}' from Qdrant.")
+        except Exception as e:
+            logger.warning(f"Failed to delete vectors for document_id '{document_id}': {e}")
 
     def upsert_document_chunks(self, chunks: List[DocumentChunk]) -> int:
         """Upsert DocumentChunk objects containing embedded dense_vector, sparse_indices, sparse_values directly."""
