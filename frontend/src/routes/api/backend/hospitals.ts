@@ -1,10 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const DEFAULT_BASE_URL = "http://localhost:3000";
 const DEFAULT_BASE_URL = "http://localhost:5000";
 
 function envBaseUrl(): string | null {
-  const value = process.env["BACKEND_URL"]?.trim();
   const value = process.env["MAP_BACKEND_URL"]?.trim() || process.env["BACKEND_URL"]?.trim();
   return value ? value.replace(/\/+$/, "") : null;
 }
