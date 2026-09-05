@@ -7,8 +7,8 @@ An intelligent First Aid and Emergency Clinical Decision Support System based on
 The application is structured into a microservices architecture:
 
 - **Frontend (`frontend/`)**: React application using TanStack Router, TypeScript, Vite, Tailwind CSS, and shadcn/ui. Acts as a BFF (Backend For Frontend) proxy to securely manage cookies and CORS.
-- **Auth & Session Backend (`auth-backend/`)**: Node.js/Express service backed by MongoDB that handles JWT authentication, secure HttpOnly cookie issuance, user registration with strong password validation, and multi-session conversation history (renaming, deleting, loading past chats).
-- **Core Clinical Backend (`backend/`)**: Production-ready FastAPI Python service following Clean Architecture that handles RAG retrieval, Qdrant integration, LLM generation, and Audio transcription.
+- **Auth & Session Backend (`backend/auth/`)**: Node.js/Express service backed by MongoDB that handles JWT authentication, secure HttpOnly cookie issuance, user registration with strong password validation, and multi-session conversation history (renaming, deleting, loading past chats).
+- **Core Clinical Backend (`backend/ai/`)**: Production-ready FastAPI Python service following Clean Architecture that handles RAG retrieval, Qdrant integration, LLM generation, and Audio transcription.
 - **Remote Microservice**: GPU-accelerated microservice hosting the BGE-M3 embedding and document parsing models.
 
 ## Key Features
@@ -53,11 +53,11 @@ cp .env.example .env
 Create the backend environment file from the provided example:
 
 ```bash
-cd backend
+cd backend/ai
 cp .env.example .env
 ```
 
-Edit `backend/.env` and insert your API keys and the Colab URL:
+Edit `backend/ai/.env` and insert your API keys and the Colab URL:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
@@ -66,7 +66,7 @@ EMBEDDING_URL=https://your-colab-ngrok-url.ngrok-free.app
 QDRANT_URL=http://qdrant:6333
 ```
 
-_(Note: The auth-backend uses a default hardcoded `JWT_SECRET_KEY` inside `docker-compose.yml`, which can be overridden by an environment variable in production)._
+_(Note: The auth backend uses a default hardcoded `JWT_SECRET_KEY` inside `docker-compose.yml`, which can be overridden by an environment variable in production)._
 
 ## Running the Application
 
@@ -90,6 +90,6 @@ Services will be spun up and available at:
 Run the full automated test suite for the core Python backend using `uv`:
 
 ```bash
-cd backend
+cd backend/ai
 uv run pytest tests/unit tests/integration/test_api_routes.py -v
 ```
