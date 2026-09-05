@@ -24,8 +24,3 @@ def test_search_endpoint_empty_query():
     response = client.post("/api/v1/retrieval/search", json={"query": ""})
     assert response.status_code == 422
 
-def test_hospitals_endpoint_structure():
-    response = client.post("/api/v1/hospitals/nearest", json={"latitude": 30.0, "longitude": 31.0})
-    # Since it tries to call real external Nominatim if not mocked in integration test,
-    # it might return 200 or 503 depending on network. Let's just assert it's one of them.
-    assert response.status_code in [200, 503]

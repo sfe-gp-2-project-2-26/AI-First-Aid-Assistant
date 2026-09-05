@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from first_aid_rag.config import settings
 from first_aid_rag.routes.generation import router as generation_router
-from first_aid_rag.routes.hospitals import router as hospitals_router
 from first_aid_rag.routes.ingestion import router as ingestion_router
 from first_aid_rag.routes.retrieval import router as retrieval_router
 from first_aid_rag.routes.transcription import router as transcription_router
@@ -37,7 +36,6 @@ app.include_router(ingestion_router)
 app.include_router(retrieval_router)
 app.include_router(generation_router)
 app.include_router(transcription_router)
-app.include_router(hospitals_router)
 
 
 @app.get("/health", tags=["Health"])
